@@ -13,7 +13,7 @@
 #include <ctime>
 #include <iomanip>
 #include <string>
-#include <sys/sysctl.h>
+// #include <sys/sysctl.h>
 #include <sstream>
 
 #define tag_size 64
@@ -35,10 +35,17 @@ void write_tag_hex(std::ofstream& file, const uint8_t* tag, size_t len = 64) {
 
 
 std::string get_cpu_name() {
-    char buffer[256];
-    size_t size = sizeof(buffer);
-    if (sysctlbyname("machdep.cpu.brand_string", buffer, &size, nullptr, 0) == 0) {
-        return std::string(buffer);
+    std::ifstream cpuinfo("/proc/cpuinfo");
+    std::string line;
+
+    while (std::getline(cpuinfo, line)) {
+        if (line.find("model name") != std::string::npos ||
+            line.find("Model") != std::string::npos) {
+
+            auto pos = line.find(':');
+            if (pos != std::string::npos)
+                return line.substr(pos + 2);
+        }
     }
     return "Unknown CPU";
 }
@@ -112,7 +119,7 @@ int main(int argc, char **argv) {
 		printf("Usage: [output_filename]\n");
 		return 0;
 	} 
-    constexpr double CPU_FREQ = 3.2e9; // Apple M1 ≈ 3.2 GHz
+    constexpr double CPU_FREQ = 2.4e9; // Apple M1 ≈ 3.2 GHz
     constexpr int ITER = 100000;
 
 
